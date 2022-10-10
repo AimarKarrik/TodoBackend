@@ -1,12 +1,1 @@
-[
-    {
-        "name": "Aimarks",
-        "password": "salasõna",
-        "id": 1
-    },
-    {
-        "name": "Aimar Ka",
-        "password": "123456",
-        "id": 738214
-    }
-]
+[{"name":"Aimarks","password":"salasõna","id":1}]

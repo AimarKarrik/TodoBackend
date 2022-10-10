@@ -1,13 +1,16 @@
 const express = require('express')
-const fs = require('fs')
-const app = express()
+const fs = require('fs');
 const crypto = require('crypto');
+const app = express();
 app.use(express.json())
+
 const port = 3000
 
-const users = JSON.parse(fs.readFile("./data/users.json"))
-const tasks = JSON.parse(fs.readFile("./data/tasks.json"))
-const sessions = JSON.parse(fs.readFile("./data/sessions.json"))
+
+
+const users = JSON.parse(fs.readFileSync("./data/users.json"))
+const tasks = JSON.parse(fs.readFileSync("./data/tasks.json"))
+const sessions = JSON.parse(fs.readFileSync("./data/sessions.json"))
 
 /* app.use((req, res, next) => {
   if(req.path === '/login' || req.path === '/register') {
@@ -77,59 +80,45 @@ app.post('/api/users', (req, res) => {
 })
 
 app.put('/api/users/:id', (req, res) => {
-  updatedUserId = req.params["id"];
-  updatedUser = req.body;
-  updatedUser.id = parseInt(updatedUserId);
+  const id = parseInt(req.params.id);
+  const index = users.findIndex(user => user.id == id);
+  const user = req.body;
+  user.id = id;
+  users[index] = user;
 
-  fs.readFile('./data/users.json', (err, data) => {
-    if(err) {
+  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
+    if (err) {
       console.log(err);
     }
-    else{
-      var users = JSON.parse(data);
-
-      updatedUserIndex = users.findIndex(user => user.id == updatedUserId);
-      users[updatedUserIndex] = updatedUser;
-
-      fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-        if (err) {
-          console.log(err);
-        }
-      })
-    }
   })
-  res.send('User: ' + updatedUserId + ' has been updated');
+  res.send(user);
 })
 
 app.delete('/api/users/:id', (req, res) => {
-  deletedUserId = req.params["id"];
+  const id = req.params.id;
+  const index = users.findIndex(user => user.id == id);
+  if (index === -1) {
+    res.status(404).send('User not found');
+    return;
+  }
+  users.splice(index, 1);
 
-  fs.readFile('./data/users.json', (err, data) => {
-    if(err) {
+  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
+    if (err) {
       console.log(err);
     }
-    else{
-      var users = JSON.parse(data);
-
-      deletedUserIndex = users.findIndex(user => user.id == deletedUserId);
-      users.splice(deletedUserIndex, 1);
-
-      fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-        if (err) {
-          console.log(err);
-        }
-      })
-    }
   })
-  res.send('User: ' + deletedUserId + ' has been deleted');
+  res.send("User deleted");
 })
 
 // crud api endpointid tasks
 // leiame kasutaja id järgi taskid.
-app.get('/api/tasks', (req, res) => {
-  let user = req.usersession.user;
-  res.send(tasks.filter(task => task.userId == req.user.id))
-})
+// app.get('/api/tasks', (req, res) => {
+//   let user = req.usersession.user;
+
+
+//   res.send(tasks.filter(task => task.userId == req.user.id))
+// })
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
