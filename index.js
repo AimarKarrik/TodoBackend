@@ -1,17 +1,59 @@
 const express = require('express')
 const fs = require('fs')
 const app = express()
+const crypto = require('crypto');
 app.use(express.json())
 const port = 3000
 
+const users = JSON.parse(fs.readFile("./data/users.json"))
+const tasks = JSON.parse(fs.readFile("./data/tasks.json"))
+const sessions = JSON.parse(fs.readFile("./data/sessions.json"))
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+/* app.use((req, res, next) => {
+  if(req.path === '/login' || req.path === '/register') {
+    next();
+  }
+  else {
+    if(req.headers.token) {
+      //find user using session token
+      let session
+      if(!session) {
+        res.status(401).send('Unauthorized')
+        return;
+      }
+      req.usersession = session;
+      next();
+    }
+    else {
+      res.status(401).send('Unauthorized');
+    }
+  }
+  
+}) */
 
-// crud api endpoints for users
+// loginis teeme uue sessioni mis seob tokeni ja useri.
+// salvestame sessioni faili.
+/* app.get('/login', (req, res) => {
+  crypto.randomBytes(128, (err, buffer) => {
+    var token = buffer.toString('hex');
+
+    let session = {
+      token: token,
+      user: users[0],
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      createdAt: new Date().toDateString()
+    };
+    // push session to ./data/session.json
+
+
+    res.send(session);
+  });
+}) */
+
+
+// crud api endpointid users
 app.get('/api/users', (req, res) => {
-  const users = JSON.parse(fs.readFileSync('./data/users.json'))
   publicUsers = users.map(function(i) {
     return {
       id: i.id,
@@ -25,18 +67,10 @@ app.post('/api/users', (req, res) => {
   const newUser = req.body;
   newUser.id = Math.floor(Math.random() * 1000000);
 
-  fs.readFile('./data/users.json', (err, data) => {
-    if(err) {
+  users.push(newUser);
+  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
+    if (err) {
       console.log(err);
-    }
-    else{
-      var users = JSON.parse(data);
-      users.push(newUser);
-      fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-        if (err) {
-          console.log(err);
-        }
-      })
     }
   })
   res.send(newUser);
@@ -90,7 +124,12 @@ app.delete('/api/users/:id', (req, res) => {
   res.send('User: ' + deletedUserId + ' has been deleted');
 })
 
-// crud api endpoints for tasks
+// crud api endpointid tasks
+// leiame kasutaja id järgi taskid.
+app.get('/api/tasks', (req, res) => {
+  let user = req.usersession.user;
+  res.send(tasks.filter(task => task.userId == req.user.id))
+})
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
