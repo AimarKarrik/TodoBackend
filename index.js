@@ -12,6 +12,13 @@ const users = JSON.parse(fs.readFileSync("./data/users.json"))
 const tasks = JSON.parse(fs.readFileSync("./data/tasks.json"))
 const sessions = JSON.parse(fs.readFileSync("./data/sessions.json"))
 
+function saveData(path, data) {
+  fs.writeFile(path, JSON.stringify(data), (err) => {
+    if (err) {
+      console.log(err);
+    }
+  })
+}
 /* app.use((req, res, next) => {
   if(req.path === '/login' || req.path === '/register') {
     next();
@@ -71,11 +78,7 @@ app.post('/api/users', (req, res) => {
   newUser.id = Math.floor(Math.random() * 1000000);
 
   users.push(newUser);
-  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-    if (err) {
-      console.log(err);
-    }
-  })
+  saveData('./data/users.json', users);
   res.send(newUser);
 })
 
@@ -86,11 +89,7 @@ app.put('/api/users/:id', (req, res) => {
   user.id = id;
   users[index] = user;
 
-  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-    if (err) {
-      console.log(err);
-    }
-  })
+  saveData('./data/users.json', users);
   res.send(user);
 })
 
@@ -103,11 +102,7 @@ app.delete('/api/users/:id', (req, res) => {
   }
   users.splice(index, 1);
 
-  fs.writeFile('./data/users.json', JSON.stringify(users), (err) => {
-    if (err) {
-      console.log(err);
-    }
-  })
+  saveData('./data/users.json', users);
   res.send("User deleted");
 })
 
