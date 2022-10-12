@@ -27,6 +27,7 @@ app.use((req, res, next) => {
   }
   else {
     if(req.headers.token) {
+      
       //find user using session token
       let session = sessions.find(session => session.token === req.headers.token);
       if(!session) {
@@ -69,7 +70,7 @@ app.get('/login', (req, res) => {
   
       let session = {
         token: token,
-        user: user.id,
+        user: user,
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         createdAt: new Date().toString(),
@@ -109,7 +110,7 @@ app.post('/api/users', (req, res) => {
 })
 
 app.put('/api/users', (req, res) => {
-  const id = req.usersession.user;
+  const id = req.usersession.user.id;
   const index = users.findIndex(user => user.id == id);
   const user = req.body;
   user.id = id;
@@ -120,7 +121,7 @@ app.put('/api/users', (req, res) => {
 })
 
 app.delete('/api/users', (req, res) => {
-  const Id = req.usersession.user;
+  const Id = req.usersession.user.id;
   const index = users.findIndex(user => user.id == id);
   if (index === -1) {
     res.status(404).send('User not found');
@@ -135,7 +136,7 @@ app.delete('/api/users', (req, res) => {
 // crud api endpointid tasks
 // leiame kasutaja id järgi taskid.
 app.get('/api/tasks', (req, res) => {
-  let userId = req.usersession.user;
+  let userId = req.usersession.user.id;
   let userTasks = tasks.filter(task => task.userId == userId);
   res.send(userTasks)
 })
@@ -143,7 +144,7 @@ app.get('/api/tasks', (req, res) => {
 app.post('/api/tasks', (req, res) => {
   const newTask = req.body;
   newTask.id = Math.floor(Math.random() * 100000000);
-  newTask.userId = req.usersession.user;
+  newTask.userId = req.usersession.user.id;
 
   tasks.push(newTask);
   saveData('./data/tasks.json', tasks);
@@ -157,7 +158,7 @@ app.put('/api/tasks/:id', (req, res) => {
     res.status(404).send('Task not found');
     return;
   }
-  if (tasks[index].userId != req.usersession.user) {
+  if (tasks[index].userId != req.usersession.user.id) {
     res.status(401).send('Unauthorized');
     return;
   }
@@ -176,7 +177,7 @@ app.delete('/api/tasks/:id', (req, res) => {
     res.status(404).send('Task not found');
     return;
   }
-  if (tasks[index].userId != req.usersession.user) {
+  if (tasks[index].userId != req.usersession.user.id) {
     res.status(401).send('Unauthorized');
     return;
   }

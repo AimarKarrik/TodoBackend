@@ -1,10 +1,1 @@
-[
-    {
-        "token": "fdfa3a676417c4c9750879bc0381443b9e66021f832a6d38d400e3b090633e219f8c7ad667802f72cfb5dc1efe65e07d665a172c611fe9978e5f8cf55f957067",
-        "user": 1,
-        "ip": "::1",
-        "userAgent": "PostmanRuntime/7.29.2",
-        "createdAt": "Wed Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)",
-        "expiresAt": "Fri Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)"
-    }
-]
+[{"token":"fdfa3a676417c4c9750879bc0381443b9e66021f832a6d38d400e3b090633e219f8c7ad667802f72cfb5dc1efe65e07d665a172c611fe9978e5f8cf55f957067","user":1,"ip":"::1","userAgent":"PostmanRuntime/7.29.2","createdAt":"Wed Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)","expiresAt":"Fri Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)"},{"token":"63d1da7f7c7ea70141e9fbb369ee1d4b33d8d2cee76020eb6cada10ce6dcf53637448740e4f84f495181ced799f817107e2d9820620ec4199cb37e199f9c15d4","user":{"username":"Aimarks","password":"salasõna","id":1},"ip":"::1","userAgent":"PostmanRuntime/7.29.2","createdAt":"Wed Oct 12 2022 14:02:46 GMT+0300 (Eastern European Summer Time)","expiresAt":"Fri Oct 14 2022 14:02:46 GMT+0300 (Eastern European Summer Time)"}]
