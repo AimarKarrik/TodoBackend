@@ -46,9 +46,9 @@ Lõbus vaalake, mis teeb teile kõik töö ära.
     ### Login Todo
     - [x] login, otsime ules kasutajanime ja parooli
     - [x] session expire - max 30 paeva
-    - [o] konto loomine
+    - [ ] konto loomine
     - [x] leiad useri ja koik taskid mis kuuluvad sellele userile
     - [x] filtreerid koik taskid ja vaatad mis kuuluvad userile
-    - [o] password encryption
+    - [ ] password encryption
 
 4. Asenda json failid andmebaasiga.
