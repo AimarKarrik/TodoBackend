@@ -33,6 +33,15 @@ app.use((req, res, next) => {
         res.status(401).send('Unauthorized')
         return;
       }
+
+      //compare session expiry with current time
+      let now = new Date();
+      let expiresAt = new Date(session.expiresAt);
+      if(now >= expiresAt) {
+        res.status(401).send('Session expired')
+        return;
+      }
+
       req.usersession = session; 
       next();
     }
@@ -48,14 +57,14 @@ app.use((req, res, next) => {
 app.get('/login', (req, res) => {
   let user = users.find(user => user.username === req.query.username);
   if(!user) {
-    res.status(404).send('User not found');
+    res.status(404).send('Username or password is incorrect');
     return;
   }
   let password = req.query.password;
 
 
   if (user.password === password) {
-    crypto.randomBytes(128, (err, buffer) => {
+    crypto.randomBytes(64, (err, buffer) => {
       var token = buffer.toString('hex');
   
       let session = {
@@ -63,17 +72,17 @@ app.get('/login', (req, res) => {
         user: user.id,
         ip: req.ip,
         userAgent: req.get('User-Agent'),
-        createdAt: new Date().toDateString()
+        createdAt: new Date().toString(),
+        expiresAt: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).toString()
       };
       
       sessions.push(session);
       saveData('./data/sessions.json', sessions);
   
-  
       res.send(session);
     });
   } else {
-    res.status(401).send('Unauthorized');
+    res.status(401).send('Username or password is incorrect');
   }
 
 })

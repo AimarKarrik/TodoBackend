@@ -1,1 +1,10 @@
-[{"token":"","user":1234},{"token":"95e0a222a9da491989b5c9316501aa3dcfb6f6781fa889f73b21b28f864df60c9df756ae9d750caed651d61fc9dc7069436a2dca7b14c4d20096489d7bcac05607bdef94d35ebb7e4e1f229fed740adb751f2ffbafb1d7be1181e9f176ab4dfc80d8286d1f8bc98d0292c1e893135f7da19e4cbdabd69053d25796222e8ab48e","user":1,"ip":"::1","userAgent":"PostmanRuntime/7.29.2","createdAt":"Tue Oct 11 2022"}]
+[
+    {
+        "token": "fdfa3a676417c4c9750879bc0381443b9e66021f832a6d38d400e3b090633e219f8c7ad667802f72cfb5dc1efe65e07d665a172c611fe9978e5f8cf55f957067",
+        "user": 1,
+        "ip": "::1",
+        "userAgent": "PostmanRuntime/7.29.2",
+        "createdAt": "Wed Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)",
+        "expiresAt": "Fri Oct 10 2022 13:55:42 GMT+0300 (Eastern European Summer Time)"
+    }
+]
