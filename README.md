@@ -19,7 +19,7 @@ Lõbus vaalake, mis teeb teie eest kõik töö ära.
 
 ## Todo
 
-1. CRUD API endpointid User ja Taskidele
+1. ### CRUD API endpointid User ja Taskidele
     - [x] User
         - [x] GET
         - [x] POST
@@ -30,8 +30,8 @@ Lõbus vaalake, mis teeb teie eest kõik töö ära.
         - [x] POST
         - [x] PUT
         - [x] DELETE
-2. Peale igat muutumist salvesta faili.
-3. login süsteem.
+2. ### Peale igat muutumist salvesta faili.
+3. ### login süsteem.
     - [x] iga kord kui kasutaja lehele tuleb kontrollime kas tal on olemas auth token.
         - [x] kui on login voi reg leht siis ei kontrolli kas oled sisse logitud.
         - [x] muul juhul tahame leida mis kasutajale auth™ token kuulub (express middleware) ((https://expressjs.com/en/guide/using-middleware.html))
@@ -43,7 +43,7 @@ Lõbus vaalake, mis teeb teie eest kõik töö ära.
             - [x] Crypto library nt bcrypt
         - [x] loginis teeme uue sessiooni (sessioon seob random tokeni useriga) useragent,ip,createdat salvetame sessiooni andmebaasi
 
-    ### Login Todo
+    #### Login Todo
     - [x] login, otsime ules kasutajanime ja parooli
     - [x] session expire - max 30 paeva
     - [x] konto loomine
