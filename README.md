@@ -8,7 +8,7 @@
   |  O        \___/  |
 ~^~^~^~^~^~^~^~^~^~^~^~^~
 ```
-Lõbus vaalake, mis teeb teile kõik töö ära.
+Lõbus vaalake, mis teeb teie eest kõik töö ära.
 
 
 ## Jooksuta api
