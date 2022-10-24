@@ -1,11 +1,12 @@
 const express = require('express')
 const fs = require('fs');
 const crypto = require('crypto');
+const bcrypt = require("bcrypt");
+const { response } = require('express');
 const app = express();
 app.use(express.json())
 
 const port = 3000
-
 
 
 const users = JSON.parse(fs.readFileSync("./data/users.json"))
@@ -55,37 +56,38 @@ app.use((req, res, next) => {
 
 // loginis teeme uue sessioni mis seob tokeni ja useri.
 // salvestame sessioni faili.
-app.get('/login', (req, res) => {
+app.get('/login', async (req, res) => {
   let user = users.find(user => user.username === req.query.username);
   if(!user) {
     res.status(404).send('Username or password is incorrect');
     return;
   }
   let password = req.query.password;
+  let passwordHash = user.password;
 
-
-  if (user.password === password) {
-    crypto.randomBytes(64, (err, buffer) => {
-      var token = buffer.toString('hex');
-  
-      let session = {
-        token: token,
-        user: user,
-        ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        createdAt: new Date().toString(),
-        expiresAt: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).toString()
-      };
-      
-      sessions.push(session);
-      saveData('./data/sessions.json', sessions);
-  
-      res.send(session);
-    });
-  } else {
+  const validPassword = await bcrypt.compare(password, passwordHash);
+  if (!validPassword) {
     res.status(401).send('Username or password is incorrect');
   }
 
+  crypto.randomBytes(64, (err, buffer) => {
+    var token = buffer.toString('hex');
+
+    let session = {
+      token: token,
+      user: user,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      createdAt: new Date().toString(),
+      expiresAt: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).toString()
+    };
+    
+    sessions.push(session);
+    saveData('./data/sessions.json', sessions);
+
+    res.send(session);
+  });
+  
 })
 
 
@@ -100,13 +102,30 @@ app.get('/api/users', (req, res) => {
   res.send(publicUsers)
 })
 
-app.post('/register', (req, res) => {
-  const newUser = req.body;
-  newUser.id = Math.floor(Math.random() * 100000000);
+app.post('/register', async (req, res) => {
+  if (users.some(user => user.username === req.body.username)) {
+    res.status(409).send('Username already exists');
+    return;
+  }
+
+  const salt = await bcrypt.genSaltSync(10);
+  const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+  const newUser = {
+    id: Math.floor(Math.random() * 1000000000),
+    username: req.body.username,
+    password: hashedPassword
+  }
 
   users.push(newUser);
   saveData('./data/users.json', users);
-  res.send(newUser);
+  const responseData = {
+    id: newUser.id,
+    username: newUser.username,
+    password: req.body.password
+  }
+
+  res.send(responseData);
 })
 
 app.put('/api/users', (req, res) => {
