@@ -100,7 +100,7 @@ app.get('/api/users', (req, res) => {
   res.send(publicUsers)
 })
 
-app.post('/api/users', (req, res) => {
+app.post('/register', (req, res) => {
   const newUser = req.body;
   newUser.id = Math.floor(Math.random() * 100000000);
 
