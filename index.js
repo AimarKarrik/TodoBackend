@@ -4,15 +4,17 @@ const crypto = require('crypto');
 const bcrypt = require("bcrypt");
 const { response } = require('express');
 const app = express();
+const { sequelize } = require('./models')
+
+
 app.use(express.json())
 
-const port = 3000
+const port = 3001
+const sessions = []
 
-
-const users = JSON.parse(fs.readFileSync("./data/users.json"))
-const tasks = JSON.parse(fs.readFileSync("./data/tasks.json"))
-const sessions = JSON.parse(fs.readFileSync("./data/sessions.json"))
-
+// do not use this in production
+// this is just for testing
+// was used for json document database
 function saveData(path, data) {
   fs.writeFile(path, JSON.stringify(data), (err) => {
     if (err) {
@@ -57,12 +59,15 @@ app.use((req, res, next) => {
 // loginis teeme uue sessioni mis seob tokeni ja useri.
 // salvestame sessioni faili.
 app.get('/login', async (req, res) => {
-  let user = users.find(user => user.username === req.query.username);
-  if(!user) {
+  
+  const { username, password } = req.query;
+  // find user from database
+  const user = await sequelize.models.users.findOne({ where: username });
+
+  if(user === null) {
     res.status(404).send('Username or password is incorrect');
-    return;
+    return; 
   }
-  let password = req.query.password;
   let passwordHash = user.password;
 
   const validPassword = await bcrypt.compare(password, passwordHash);
@@ -83,7 +88,6 @@ app.get('/login', async (req, res) => {
     };
     
     sessions.push(session);
-    saveData('./data/sessions.json', sessions);
 
     res.send(session);
   });
@@ -103,29 +107,23 @@ app.get('/api/users', (req, res) => {
 })
 
 app.post('/register', async (req, res) => {
-  if (users.some(user => user.username === req.body.username)) {
+  const { username, password } = req.body;
+  if (await sequelize.models.users.findOne({ where: { username: username } }) !== null) {
     res.status(409).send('Username already exists');
     return;
   }
 
   const salt = await bcrypt.genSaltSync(10);
-  const hashedPassword = await bcrypt.hash(req.body.password, salt);
+  const hashedPassword = await bcrypt.hash(password, salt);
 
   const newUser = {
-    id: Math.floor(Math.random() * 1000000000),
     username: req.body.username,
     password: hashedPassword
   }
 
-  users.push(newUser);
-  saveData('./data/users.json', users);
-  const responseData = {
-    id: newUser.id,
-    username: newUser.username,
-    password: req.body.password
-  }
+  const user = await sequelize.models.users.create(newUser);
 
-  res.send(responseData);
+  res.send(user);
 })
 
 app.put('/api/users', (req, res) => {
@@ -206,6 +204,10 @@ app.delete('/api/tasks/:id', (req, res) => {
   res.send("Task deleted");
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+
+app.listen(port, async () => {
+  console.log(`Api listening on http://localhost:${port}`)
+  await sequelize.authenticate();
+  console.log('Database connection established');
 })
+
