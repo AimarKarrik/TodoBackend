@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       this.hasMany(tasks, { foreignKey: 'userId' });
     }
+    toJSON() {
+      return { ...this.get(), id: undefined, password: undefined, createdAt: undefined, updatedAt: undefined };
+    }
   }
   users.init({
     id: {

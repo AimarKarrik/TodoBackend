@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       this.belongsTo(users, { foreignKey: 'id' });
     }
+    toJSON() {
+      return { ...this.get(), id: undefined, userId: undefined };
+    }
   }
   tasks.init({
     id: {
@@ -21,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       allowNull: false
     },
+    
     task: {
       type: DataTypes.STRING,
       allowNull: false
@@ -31,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     completed: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       allowNull: false
     }
   }, 

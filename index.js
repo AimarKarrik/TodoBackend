@@ -34,7 +34,8 @@ app.use((req, res, next) => {
       //find user using session token
       let session = sessions.find(session => session.token === req.headers.token);
       if(!session) {
-        res.status(401).send('Unauthorized')
+        console.log('session not found');
+        res.status(401).json({status: 'Unauthorized'})
         return;
       }
 
@@ -50,7 +51,8 @@ app.use((req, res, next) => {
       next();
     }
     else {
-      res.status(401).send('Unauthorized');
+      console.log('no token');
+      res.status(401).json({status: 'Unauthorized'});
     }
   }
   
@@ -61,20 +63,25 @@ app.use((req, res, next) => {
 app.get('/login', async (req, res) => {
   
   const { username, password } = req.query;
-  // find user from database
-  const user = await sequelize.models.users.findOne({ where: username });
 
+  // find user from database
+  const user = await sequelize.models.users.findOne({ where: { username: username } });
+
+  // check if user exists
   if(user === null) {
-    res.status(404).send('Username or password is incorrect');
+    res.status(404).json({status: 'Username or password is incorrect'});
     return; 
   }
-  let passwordHash = user.password;
 
+  // check if password is correct
+  let passwordHash = user.password;
   const validPassword = await bcrypt.compare(password, passwordHash);
   if (!validPassword) {
-    res.status(401).send('Username or password is incorrect');
+    res.status(404).json({status: 'Username or password is incorrect'});
+    return;
   }
 
+  // create session
   crypto.randomBytes(64, (err, buffer) => {
     var token = buffer.toString('hex');
 
@@ -83,29 +90,19 @@ app.get('/login', async (req, res) => {
       user: user,
       ip: req.ip,
       userAgent: req.get('User-Agent'),
-      createdAt: new Date().toString(),
-      expiresAt: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).toString()
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2).toISOString()
     };
     
     sessions.push(session);
 
-    res.send(session);
+    res.status(200).json({status: 'OK', session: session});
   });
   
 })
 
 
 // crud api endpointid users
-app.get('/api/users', (req, res) => {
-  publicUsers = users.map(function(i) {
-    return {
-      id: i.id,
-      username: i.username
-    }
-  })
-  res.send(publicUsers)
-})
-
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   if (await sequelize.models.users.findOne({ where: { username: username } }) !== null) {
@@ -115,7 +112,6 @@ app.post('/register', async (req, res) => {
 
   const salt = await bcrypt.genSaltSync(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-
   const newUser = {
     username: req.body.username,
     password: hashedPassword
@@ -126,84 +122,50 @@ app.post('/register', async (req, res) => {
   res.send(user);
 })
 
-app.put('/api/users', (req, res) => {
-  const id = req.usersession.user.id;
-  const index = users.findIndex(user => user.id == id);
-  const user = req.body;
-  user.id = id;
-  users[index] = user;
+app.put('/api/user', async (req, res) => {
+  await sequelize.models.users.update({password: req.params.password}, {where: { username: req.usersession.user.username } });
+  const updatedUser = await sequelize.models.users.findOne({ where: { username: req.usersession.user.username } })
 
-  saveData('./data/users.json', users);
-  res.send(user);
+  res.status(200).json({status: 'User updated', user: updatedUser});
 })
 
-app.delete('/api/users', (req, res) => {
-  const Id = req.usersession.user.id;
-  const index = users.findIndex(user => user.id == id);
-  if (index === -1) {
-    res.status(404).send('User not found');
-    return;
-  }
-  users.splice(index, 1);
+app.delete('/api/user', async (req, res) => {
+  await sequelize.models.users.destroy({ where: { username: req.usersession.user.username } });
 
-  saveData('./data/users.json', users);
-  res.send("User deleted");
+  res.status(200).json({status: 'User deleted'});
 })
 
 // crud api endpointid tasks
-// leiame kasutaja id järgi taskid.
-app.get('/api/tasks', (req, res) => {
-  let userId = req.usersession.user.id;
-  let userTasks = tasks.filter(task => task.userId == userId);
-  res.send(userTasks)
+app.get('/api/tasks', async (req, res) => {
+  console.log("gets to get tasks");
+  const tasks = await sequelize.models.tasks.findAll({ where: { userId: req.usersession.user.id } });
+
+  res.status(200).json({status: 'OK', tasks: tasks});
 })
 
-app.post('/api/tasks', (req, res) => {
-  const newTask = req.body;
-  newTask.id = Math.floor(Math.random() * 100000000);
-  newTask.userId = req.usersession.user.id;
+app.post('/api/tasks', async (req, res) => {
+  const newTask = {
+    task: req.params.task,
+    userId: req.usersession.user.id
+  }
 
-  tasks.push(newTask);
-  saveData('./data/tasks.json', tasks);
-  res.send(newTask);
+  const task = await sequelize.models.tasks.create(newTask);
+
+  res.status(200).json({status: 'OK', task: task});
 })
 
-app.put('/api/tasks/:id', (req, res) => {
-  const id = req.params.id;
-  const index = tasks.findIndex(task => task.id == id);
-  if (index === -1) {
-    res.status(404).send('Task not found');
-    return;
-  }
-  if (tasks[index].userId != req.usersession.user.id) {
-    res.status(401).send('Unauthorized');
-    return;
-  }
-  const task = req.body;
-  task.id = id;
-  tasks[index] = task;
+/* app.put('/api/tasks/:id', async (req, res) => {
 
-  saveData('./data/users.json', tasks);
-  res.send(task);
 })
 
 app.delete('/api/tasks/:id', (req, res) => {
-  const id = req.params.id;
-  const index = tasks.findIndex(task => task.id == id);
-  if (index === -1) {
-    res.status(404).send('Task not found');
-    return;
-  }
-  if (tasks[index].userId != req.usersession.user.id) {
-    res.status(401).send('Unauthorized');
-    return;
-  }
-  
-  tasks.splice(index, 1);
-  saveData('./data/tasks.json', tasks);
-  res.send("Task deleted");
-})
 
+}) */
+
+ // meme api endpoint
+app.get('/api/coffee', (req, res) => {
+  res.status(418).send('I cannot brew coffee, for i am a teapot.');
+})
 
 app.listen(port, async () => {
   console.log(`Api listening on http://localhost:${port}`)
