@@ -154,13 +154,38 @@ app.post('/api/tasks', async (req, res) => {
   res.status(200).json({status: 'OK', task: task});
 })
 
-/* app.put('/api/tasks/:id', async (req, res) => {
+app.put('/api/tasks', async (req, res) => {
+  if (await sequelize.models.tasks.findOne({ where: { id: req.params.uuid } }) === null) {
+    res.status(404).send('Task not found');
+    return;
+  }
 
+  if (usersession.id !== sequelize.models.tasks.findOne({ where: { id: req.params.uuid } }).userId) {
+    res.status(404).send('Task not found');
+    return;
+  }
+
+  updatedTaskData = {
+    task: req.params.task,
+    completed: req.params.completed
+  }
+
+  await sequelize.models.tasks.update(updatedTaskData , {where: { uuid: req.params.uuid } });
+  const updatedTask = await sequelize.models.tasks.findOne({ where: { id: req.params.id } });
+
+  res.status(200).json({status: 'Task updated', task: updatedTask});
 })
 
-app.delete('/api/tasks/:id', (req, res) => {
+app.delete('/api/tasks', async (req, res) => {
+  if (usersession.id !== sequelize.models.tasks.findOne({ where: { id: req.params.uuid } }).userId) {
+    res.status(404).send('Task not found');
+    return;
+  }
 
-}) */
+  await sequelize.models.tasks.destroy({ where: { id: req.params.uuid } });
+
+  res.status(200).json({status: 'Task deleted'});
+})
 
  // meme api endpoint
 app.get('/api/coffee', (req, res) => {
