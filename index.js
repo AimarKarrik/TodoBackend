@@ -1,27 +1,17 @@
 const express = require('express')
-const fs = require('fs');
 const crypto = require('crypto');
 const bcrypt = require("bcrypt");
 const { response } = require('express');
+const cors = require('cors');
 const app = express();
 const { sequelize } = require('./models')
 
 
 app.use(express.json())
+app.use(cors())
 
 const port = 3001
 const sessions = []
-
-// do not use this in production
-// this is just for testing
-// was used for json document database
-function saveData(path, data) {
-  fs.writeFile(path, JSON.stringify(data), (err) => {
-    if (err) {
-      console.log(err);
-    }
-  })
-}
 
 
 app.use((req, res, next) => {
@@ -59,17 +49,27 @@ app.use((req, res, next) => {
 })
 
 // loginis teeme uue sessioni mis seob tokeni ja useri.
-// salvestame sessioni faili.
-app.get('/login', async (req, res) => {
+// salvestame sessioni
+app.post('/login', async (req, res) => {
 
-  const { username, password } = req.query;
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    res.status(400).json({ status: 'Username or password is incorrect' });
+    return;
+  }
+
+  if (typeof (username) !== "string" || typeof (password) !== "string") {
+    res.status(400).json({ status: 'Username or password is incorrect' });
+    return;
+  }
 
   // find user from database
   const user = await sequelize.models.users.findOne({ where: { username: username } });
 
   // check if user exists
   if (user === null) {
-    res.status(404).json({ status: 'Username or password is incorrect' });
+    res.status(400).json({ status: 'Username or password is incorrect' });
     return;
   }
 
@@ -77,7 +77,7 @@ app.get('/login', async (req, res) => {
   let passwordHash = user.password;
   const validPassword = await bcrypt.compare(password, passwordHash);
   if (!validPassword) {
-    res.status(404).json({ status: 'Username or password is incorrect' });
+    res.status(400).json({ status: 'Username or password is incorrect' });
     return;
   }
 
@@ -106,7 +106,7 @@ app.get('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   if (await sequelize.models.users.findOne({ where: { username: username } }) !== null) {
-    res.status(409).send('Username already exists');
+    res.status(409).json({ status: 'Username already exists' });
     return;
   }
 
@@ -123,6 +123,10 @@ app.post('/register', async (req, res) => {
 })
 
 app.put('/api/user', async (req, res) => {
+  if (await sequelize.models.users.findOne({ where: { username: req.body.username } }) === null) {
+    res.status(404).send('User not found');
+    return;
+  }
   await sequelize.models.users.update({ password: req.params.password }, { where: { username: req.usersession.user.username } });
   const updatedUser = await sequelize.models.users.findOne({ where: { username: req.usersession.user.username } })
 
@@ -137,13 +141,14 @@ app.delete('/api/user', async (req, res) => {
 
 // crud api endpointid tasks
 app.get('/api/tasks', async (req, res) => {
-  console.log("gets to get tasks");
+  console.log(req.usersession.user.id);
   const tasks = await sequelize.models.tasks.findAll({ where: { userId: req.usersession.user.id } });
 
   res.status(200).json({ status: 'OK', tasks: tasks });
 })
 
 app.post('/api/tasks', async (req, res) => {
+  console.log(req.body);
   const newTask = {
     task: req.body.task,
     userId: req.usersession.user.id
@@ -160,18 +165,19 @@ app.post('/api/tasks', async (req, res) => {
 })
 
 app.put('/api/tasks', async (req, res) => {
-  if (!typeof (req.body.task) === "string" || !typeof (req.body.completed) === "boolean" || !typeof (req.body.uuid) === "string") {
+  console.log(req.body);
+  if (typeof (req.body.task) !== "string" || typeof (req.body.completed) !== "boolean" || typeof (req.body.uuid) !== "string") {
     res.status(400).send('Invalid data');
     return;
   }
 
-  if (await sequelize.models.tasks.findOne({ where: { id: req.body.uuid } }) === null) {
+  if (await sequelize.models.tasks.findOne({ where: { uuid: req.body.uuid } }) === null) {
     res.status(404).send('Task not found');
     return;
   }
 
-  if (usersession.id !== sequelize.models.tasks.findOne({ where: { id: req.params.uuid } }).userId) {
-    res.status(404).send('Task not found');
+  if (req.usersession.id !== sequelize.models.tasks.findOne({ where: { uuid: req.body.uuid } }).userId) {
+    res.status(404).send('Task nots found');
     return;
   }
 
@@ -181,24 +187,25 @@ app.put('/api/tasks', async (req, res) => {
     completed: req.body.completed
   }
 
-  await sequelize.models.tasks.update(updatedTaskData, { where: { uuid: req.params.uuid } });
-  const updatedTask = await sequelize.models.tasks.findOne({ where: { id: req.params.id } });
+  await sequelize.models.tasks.update(updatedTaskData, { where: { uuid: req.body.uuid } });
+  const updatedTask = await sequelize.models.tasks.findOne({ where: { uuid: req.body.uuid } });
 
   res.status(200).json({ status: 'Task updated', task: updatedTask });
 })
 
 app.delete('/api/tasks', async (req, res) => {
-  if (!typeof (req.body.uuid) === "string") {
+  console.log(req.body);
+  if (typeof (req.body.uuid) !== "string") {
     res.status(400).send('Invalid data');
     return;
   }
 
-  if (usersession.id !== sequelize.models.tasks.findOne({ where: { id: req.body.uuid } }).userId) {
+  if (req.usersession.id !== sequelize.models.tasks.findOne({ where: { id: req.body.uuid } }).userId) {
     res.status(404).send('Task not found');
     return;
   }
 
-  await sequelize.models.tasks.destroy({ where: { id: req.params.uuid } });
+  await sequelize.models.tasks.destroy({ where: { uuid: req.body.uuid } });
 
   res.status(200).json({ status: 'Task deleted' });
 })
