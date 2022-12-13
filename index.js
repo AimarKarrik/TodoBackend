@@ -149,7 +149,7 @@ app.post('/api/tasks', async (req, res) => {
     userId: req.usersession.user.id
   }
 
-  if (!req.body.task === typeof String) {
+  if (!typeof (req.body.task) === "string") {
     res.status(400).send('Task must be a string');
     return;
   }
@@ -160,7 +160,7 @@ app.post('/api/tasks', async (req, res) => {
 })
 
 app.put('/api/tasks', async (req, res) => {
-  if (!req.body.uuid === typeof String || !req.body.task === typeof String || !req.body.completed === typeof Boolean) {
+  if (!typeof (req.body.task) === "string" || !typeof (req.body.completed) === "boolean" || !typeof (req.body.uuid) === "string") {
     res.status(400).send('Invalid data');
     return;
   }
@@ -188,7 +188,7 @@ app.put('/api/tasks', async (req, res) => {
 })
 
 app.delete('/api/tasks', async (req, res) => {
-  if (!req.body.uuid === typeof String) {
+  if (!typeof (req.body.uuid) === "string") {
     res.status(400).send('Invalid data');
     return;
   }
